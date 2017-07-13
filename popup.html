@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+    <title>Remote Eye Tracker</title>
+
+    <script type="text/javascript" src="js/jquery-1.4.2.min.js"></script>
+    <script src="js/popup/popup.js"></script>
+    <script src="js/utils.js"></script>
+
+    <style>
+        body {
+            min-width: 300px;
+            font-size: 13px;
+        }
+
+        .table table {
+            border: 1px
+        }
+        button {
+            min-height: 10px;
+        }
+        li{
+            list-style:none;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container" style="text-align: center">
+    <h2>Remote Eye Tracker</h2>
+
+    State: <input id="state" type="text" value="Not logging" disabled="disabled" style="margin-bottom: 20px; width: 90px"/>
+
+    <div>
+        <button id="begin">Begin logging</button>
+        <button id="end">End logging</button>
+        <button id="submit">Submit logs</button>
+    </div>
+
+    <ul id="loglist" style="padding: 0">
+    </ul>
+
+    <div class="log-table" style="margin-top: 20px; display: none" >
+        <table class="table">
+            <thead>
+            <tr style="text-align: center;">
+                <th></th>
+                <th>PageUrl</th>
+                <th>RecordName</th>
+            </tr>
+            </thead>
+
+            <tbody id="logrecords">
+                <tr>
+                    <th>
+                        <label><input type="checkbox" value=""/></label>
+                    </th>
+                    <td>http://www.baidu.com/</td>
+                    <td>2153526</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+</body>
+</html>

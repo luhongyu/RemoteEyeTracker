@@ -1,0 +1,49 @@
+{
+  "name": "Remote Eye Tracker",
+  "version": "1.2",
+  "manifest_version": 2,
+  "description": "Reads your history, and shows the top ten pages you go to by typing the URL.",
+
+  "browser_action": {
+    "default_popup": "popup.html",
+    "default_icon": "sources/icon.png"
+  },
+  "background": {
+    "scripts": [
+      "js/jquery-1.4.2.min.js",
+      "js/background/background.js",
+      "js/utils.js"
+    ],
+    "persistent": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.amazon.com/*",
+        "file://*"
+      ],
+      "js": [
+        "js/jquery-1.4.2.min.js",
+        "js/content/player.js",
+        "js/content/tracker.js",
+        "js/content/content.js",
+        "js/utils.js"
+        // "js/content/searchgazer.js",
+        // "js/content/eyeTracker.js"
+      ]
+    }
+  ],
+  "web_accessible_resources":[
+    "sources/icon.png",
+    "sources/cursor.gif"
+  ],
+  "permissions": [
+    "pageCapture",
+    "contextMenus",
+    "tabs",
+    "storage",
+    "http://*/",
+    "https://*/",
+    "file://*"
+  ]
+}
