@@ -50,3 +50,31 @@ function hashUrl(url) {
     }
     return url;
 }
+
+function bound(data) {
+    if (data.x < 0)
+        data.x = 0;
+    if (data.y < 0)
+        data.y = 0;
+    var boundw = $(window).width();
+    var boundh = $(window).height();
+    if (data.x > boundw)
+        data.x = boundw;
+    if (data.y > boundh)
+        data.y = boundh;
+    return data;
+}
+
+function buildLogName() {
+    return getNowFormatDate();
+}
+function getMousePos(ev) {
+    var e = ev || window.event;
+    var scrollX = document.documentElement.scrollLeft || document.body.scrollLeft;
+    var scrollY = document.documentElement.scrollTop || document.body.scrollTop;
+    var clientLeft = document.body.clientLeft;
+    var clientTop = document.body.clientTop;
+    var x = e.pageX || e.clientX + scrollX - clientLeft;
+    var y = e.pageY || e.clientY + scrollY - clientTop;
+    return { 'x': x, 'y': y };
+}

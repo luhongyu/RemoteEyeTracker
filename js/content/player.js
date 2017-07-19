@@ -4,21 +4,28 @@
  *
  */
 
-const cursorimg = chrome.extension.getURL("sources/cursor.gif");
-$('body').append("<img class=\"cursor\" src=\"sources/cursor.gif\" style=\"position:absolute;\" />");
-$('body .cursor').attr("src", cursorimg);
-
-const cursor = $('img.cursor');
+var cursor;
 var body = $("html, body");
+// var PLAY_RECORD;
+
+let step = null;
+let prevstep = null;
+
+
+function playInit() {
+    var cursorimg = chrome.extension.getURL("sources/cursor.gif");
+    $('body').append("<img class=\"cursor\" src=\"sources/cursor.gif\" style=\"position:absolute;\" />");
+    $('body .cursor').attr("src", cursorimg);
+
+    cursor = $('img.cursor');
+}
 
 //TODO: add set function
-var PLAY_RECORD;
-
-function playSequence(logname) {
+function playSequence(loglist) {
     cursor.clearQueue();
 
     //TODO: set by background
-    let sequence = (PAGE_RECORDS[logname]).slice();
+    let sequence = loglist.slice();
 
     body.scrollTop(0);
     body.scrollLeft(0);
@@ -30,12 +37,9 @@ function playSequence(logname) {
     playStep(sequence);
 }
 
-let step = null;
-let prevstep = null;
-
 function playStep(sequence) {
     step = sequence.shift();
-    console.log(step);
+    //console.log(step);
 
     if (step.type === 'MOUSE_MOVE') {
         if (!prevstep){
@@ -76,7 +80,6 @@ function playStep(sequence) {
     //     cursor.delay(step.time - prevstep.time);
     //     nextStep(step, sequence);
     // }
-
     else {
         if (sequence.length > 0) {
             playStep(sequence);

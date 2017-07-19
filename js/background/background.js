@@ -9,28 +9,24 @@
  */
 
 var USER_LOG_RECORDS = {};
-var LOG_STATES = {};
-var USER_ID = 0;
-var GLOBAL_KEY = false;
+var USER_ID = localStorage.getItem("USER_ID") || "default";
+var GLOBAL_KEY = localStorage.getItem("GLOBAL_KEY");
 
 loadLogLocal();
 
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
     /**
-     * request.key : ['LOG_BEGIN', 'LOG_END']
+     * request.key : ['LOG_BEGIN', 'LOG_END', ]
      */
-    let tab = sender.tab;
-    let url_id = hashUrl(tab.url);
-    let mhtml = null;
 
-    if (request.key === "LOG_BEGIN") {
-        changeState(url_id, "IN_RECORDING");
-    }
-
-    if (request.key === "LOG_END"){
+    if (request.key === "PAGE_LOG_BEGIN") {}
+    else if (request.key === "PAGE_LOG_END"){
         /**
          * get mhtml -> save logdata
          */
+        let tab = sender.tab;
+        let url_id = hashUrl(tab.url);
+        let mhtml = null;
         let page_mhtml_id = USER_ID + "_" + request.log_name + "_" + url_id;
         chrome.pageCapture.saveAsMHTML({tabId: tab.id}, function(mhtmlData) {
             var reader = new window.FileReader();
@@ -40,28 +36,24 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
             };
             reader.readAsBinaryString(mhtmlData);
         });
-
         saveLogLocal(request.log_name, tab.url, request.log_data, page_mhtml_id, url_id);
-        changeState(url_id, "NOT_RECORDING");
     }
-
-    if (request.key === "GLOBAL_KEY"){
-        sendResponse({"GLOBAL_KEY": GLOBAL_KEY});
+    //TODO: no use
+    else if (request.key === "LOG_BEGIN"){
+        GLOBAL_KEY = true;
+        localStorage.setItem("GLOBAL_KEY", "true");
+    }
+    else if (request.key === "LOG_END"){
+        GLOBAL_KEY = false;
+        localStorage.setItem("GLOBAL_KEY", "false");
     }
 
 });
 
-function changeState(url_id, state) {
-    if (!LOG_STATES.hasOwnProperty(url_id)){
-        LOG_STATES[url_id] = state
-    }else{
-        LOG_STATES[url_id] = state;
-    }
-}
 
 function saveLogLocal(log_name, log_url, log_data, page_mhtml_id, url_id) {
     if (!USER_LOG_RECORDS.hasOwnProperty(url_id)){
-        USER_LOG_RECORDS[url_id] = [];
+        USER_LOG_RECORDS[url_id] = {};
     }
     let log_record = {
         "submit_time": getNowFormatDate(),
@@ -71,7 +63,7 @@ function saveLogLocal(log_name, log_url, log_data, page_mhtml_id, url_id) {
         "page_mhtml_id": page_mhtml_id,
         "url_id": url_id
     };
-    USER_LOG_RECORDS[url_id].push(log_record);
+    USER_LOG_RECORDS[url_id][log_name] = log_record;
 
     let local_key = "LOG_" + USER_ID + "_" + log_name + "_" + url_id;
     let local_save = {};
@@ -84,7 +76,6 @@ function saveLogLocal(log_name, log_url, log_data, page_mhtml_id, url_id) {
         }
     );
 }
-
 function loadLogLocal() {
     chrome.storage.local.get(null, function (logdic) {
         let tks = Object.getOwnPropertyNames(logdic);
@@ -99,9 +90,9 @@ function loadLogLocal() {
 
                 if (user_id === USER_ID){
                     if (!USER_LOG_RECORDS.hasOwnProperty(url_id)){
-                        USER_LOG_RECORDS[url_id] = [];
+                        USER_LOG_RECORDS[url_id] = {};
                     }
-                    USER_LOG_RECORDS[url_id].push(logdic[tk]);
+                    USER_LOG_RECORDS[url_id][logdic[tk].log_name] = logdic[tk];
                 }
             }
         }
@@ -123,7 +114,6 @@ function ajaxPageMhtml(page_id, mhtml) {
         }
     });
 }
-
 function ajaxLogMessage(log_record) {
     var log_url = "http://127.0.0.1:2018/log/";
     $.ajax({
@@ -142,31 +132,27 @@ function ajaxLogMessage(log_record) {
 /**
  * For p_popup.js
  */
-function getRecordNames(url_id) {
-    let rec_names = [];
-    if (USER_LOG_RECORDS.hasOwnProperty(url_id)){
-        for (let i = 0; i < USER_LOG_RECORDS[url_id].length; i++){
-            let trec = USER_LOG_RECORDS[url_id][i];
-            rec_names.push(trec.log_name);
-        }
-    }
-    return rec_names;
-}
-function getTabStatus(url_id) {
-    if (LOG_STATES.hasOwnProperty(url_id)){
-        return LOG_STATES[url_id];
+function getState() {
+    if (GLOBAL_KEY){
+        return "IN_RECORDING";
     }else{
         return "NOT_RECORDING";
     }
 }
-
+function getRecordNames(url_id) {
+    if (USER_LOG_RECORDS.hasOwnProperty(url_id)){
+        return Object.getOwnPropertyNames(USER_LOG_RECORDS[url_id])
+    }
+    return [];
+}
 function getUserRecords() {
     let recs = [];
     let turls = Object.getOwnPropertyNames(USER_LOG_RECORDS);
     for (let i = 0; i < turls.length; i++) {
         let turl = turls[i];
-        for (let i = 0; i < USER_LOG_RECORDS[turl].length; i++){
-            let trec = USER_LOG_RECORDS[turl][i];
+        let lognames = getRecordNames(turl);
+        for (let i = 0; i < lognames.length; i++){
+            let trec = USER_LOG_RECORDS[turl][lognames[i]];
             recs.push({
                 "url": trec.log_url,
                 "log_name": trec.log_name
@@ -174,6 +160,19 @@ function getUserRecords() {
         }
     }
     return recs;
+}
+
+function getPageRecord(tab, logname) {
+    var url_id = hashUrl(tab.url);
+    if (USER_LOG_RECORDS.hasOwnProperty(url_id)){
+        if (USER_LOG_RECORDS[url_id].hasOwnProperty(logname)) {
+            return USER_LOG_RECORDS[url_id][logname].log_data;
+        }else{
+            return [];
+        }
+    }else{
+        return [];
+    }
 }
 
 // TODO: onUpdated

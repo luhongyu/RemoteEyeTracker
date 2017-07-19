@@ -2,7 +2,7 @@
  * Created by luhongyu on 2017/7/12.
  */
 
-window.onload = function () {
+function eyeTrackerInit() {
     webgazer.setRegression('ridge')
         .setTracker('clmtrackr')
         .setGazeListener(function (data, clock) {
@@ -11,7 +11,6 @@ window.onload = function () {
                 data = bound(data);
                 var px = data.x + $(window).scrollLeft();
                 var py = data.y + $(window).scrollTop();
-                console.log(data);
                 gaze_list.push({"px": px, "py": py, "time": parseInt(clock)});
             }
         })
@@ -45,22 +44,8 @@ window.onload = function () {
     }
 
     setTimeout(checkIfReady, 100);
-};
 
-window.onbeforeunload = function () {
-    webgazer.end();
-};
-
-function bound(data) {
-    if (data.x < 0)
-        data.x = 0;
-    if (data.y < 0)
-        data.y = 0;
-    var boundw = $(window).width();
-    var boundh = $(window).height();
-    if (data.x > boundw)
-        data.x = boundw;
-    if (data.y > boundh)
-        data.y = boundh;
-    return data;
+    window.onbeforeunload = function () {
+        webgazer.end();
+    };
 }
