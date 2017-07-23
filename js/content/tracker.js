@@ -4,7 +4,7 @@
  *
  *
  */
-function log_init() {
+function initLog() {
     /**
      * Record mouse events:
      *   mousemove; mousedown; mouseup
@@ -19,6 +19,7 @@ function log_init() {
     });
     $(document).click(function (e) {
         recordEvent(e, "CLICK");
+        console.log(gaze_list);
     });
     $(window).scroll(function (e) {
         recordEvent(e, "SCROLL");
@@ -56,12 +57,21 @@ function recordEvent(e, type) {
         }
         else if(type === "MOUSE_MOVE"){
             let mouse = getMousePos(e);
-            events.push({
-                time: e.timeStamp - START_TIME,
-                type: type,
-                x: mouse.x,
-                y: mouse.y
-            });
+            if (e.timeStamp - lastTimeStamp_mouseMove > MIN_MOUSE_TRACKER_INTERVAL){
+                lastTimeStamp_mouseMove = e.timeStamp;
+                events.push({
+                    time: e.timeStamp - START_TIME,
+                    type: type,
+                    x: mouse.x,
+                    y: mouse.y
+                });
+            }
+            // events.push({
+            //     time: e.timeStamp - START_TIME,
+            //     type: type,
+            //     x: mouse.x,
+            //     y: mouse.y
+            // });
         }
         else if(type === "CLICK"){
             let mouse = getMousePos(e);
@@ -82,7 +92,7 @@ function recordEvent(e, type) {
         }
         else if(type === "JUMP_IN" || type === "JUMP_OUT" || type === "PAGE_END" || type === "PAGE_BEGIN"){
             events.push({
-                time: new Date() - START_TIME,
+                time: performance.now() - START_TIME,
                 type: type
             })
         }
@@ -113,14 +123,17 @@ function endRecording() {
     chrome.extension.sendMessage({
         key: "PAGE_LOG_END",
         log_name: NOW_RECORD,
-        log_data: events
+        log_data: events,
+        gaze_data: gaze_list
     });
 
     console.log(NOW_RECORD + "\t End logging!");
     console.log(events);
+    console.log(gaze_list);
 
     //reset
     events = [];
+    gaze_list = [];
 }
 
 

@@ -16,27 +16,24 @@ loadLogLocal();
 
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
     /**
-     * request.key : ['LOG_BEGIN', 'LOG_END', ]
+     * @param request.key: ['PAGE_LOG_BEGIN', 'PAGE_LOG_END', 'LOG_BEGIN', 'LOG_END']
      */
-
-    if (request.key === "PAGE_LOG_BEGIN") {}
+    if (request.key === "PAGE_LOG_BEGIN") {
+    }
     else if (request.key === "PAGE_LOG_END"){
-        /**
-         * get mhtml -> save logdata
-         */
+        // save mhtml
         let tab = sender.tab;
         let url_id = hashUrl(tab.url);
-        let mhtml = null;
         let page_mhtml_id = USER_ID + "_" + request.log_name + "_" + url_id;
         chrome.pageCapture.saveAsMHTML({tabId: tab.id}, function(mhtmlData) {
             var reader = new window.FileReader();
             reader.onloadend = function() {
-                mhtml = reader.result;
-                ajaxPageMhtml(page_mhtml_id, mhtml);
+                ajaxPageMhtml(page_mhtml_id, reader.result);
             };
             reader.readAsBinaryString(mhtmlData);
         });
-        saveLogLocal(request.log_name, tab.url, request.log_data, page_mhtml_id, url_id);
+        // save logdata
+        saveLogLocal(request.log_name, tab.url, request.log_data, request.gaze_data, page_mhtml_id, url_id);
     }
     //TODO: no use
     else if (request.key === "LOG_BEGIN"){
@@ -47,11 +44,10 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse){
         GLOBAL_KEY = false;
         localStorage.setItem("GLOBAL_KEY", "false");
     }
-
 });
 
 
-function saveLogLocal(log_name, log_url, log_data, page_mhtml_id, url_id) {
+function saveLogLocal(log_name, log_url, log_data, gaze_data, page_mhtml_id, url_id) {
     if (!USER_LOG_RECORDS.hasOwnProperty(url_id)){
         USER_LOG_RECORDS[url_id] = {};
     }
@@ -60,6 +56,7 @@ function saveLogLocal(log_name, log_url, log_data, page_mhtml_id, url_id) {
         "log_name": log_name,
         "log_url": log_url,
         "log_data": log_data,
+        "gaze_data": gaze_data,
         "page_mhtml_id": page_mhtml_id,
         "url_id": url_id
     };
@@ -79,7 +76,6 @@ function saveLogLocal(log_name, log_url, log_data, page_mhtml_id, url_id) {
 function loadLogLocal() {
     chrome.storage.local.get(null, function (logdic) {
         let tks = Object.getOwnPropertyNames(logdic);
-        console.log(tks);
         for (let i = 0; i < tks.length; i++){
             let tk = tks[i];
             console.log(tk);
@@ -105,8 +101,8 @@ function ajaxPageMhtml(page_id, mhtml) {
         type: 'POST',
         dataType: 'json',
         url: mhtml_url,
-        user_id: USER_ID,
         data: {
+            "user_id": USER_ID,
             "page_id": page_id,
             "mhtml": mhtml
         },
@@ -114,14 +110,15 @@ function ajaxPageMhtml(page_id, mhtml) {
         }
     });
 }
+// TODO: post logdata
 function ajaxLogMessage(log_record) {
     var log_url = "http://127.0.0.1:2018/log/";
     $.ajax({
         type: 'POST',
         dataType: 'json',
         url: log_url,
-        user_id: USER_ID,
         data: {
+            "user_id": USER_ID,
             "log_record": JSON.stringify(log_record)
         },
         complete: function (jqXHR, textStatus) {
@@ -130,16 +127,16 @@ function ajaxLogMessage(log_record) {
 }
 
 /**
- * For p_popup.js
+ * For popup.js
  */
-function getState() {
-    if (GLOBAL_KEY){
+function getPageRecordState() {
+    if (GLOBAL_KEY === "true"){
         return "IN_RECORDING";
     }else{
         return "NOT_RECORDING";
     }
 }
-function getRecordNames(url_id) {
+function getPageRecordNames(url_id) {
     if (USER_LOG_RECORDS.hasOwnProperty(url_id)){
         return Object.getOwnPropertyNames(USER_LOG_RECORDS[url_id])
     }
@@ -161,12 +158,11 @@ function getUserRecords() {
     }
     return recs;
 }
-
-function getPageRecord(tab, logname) {
+function getRecordData(tab, logname) {
     var url_id = hashUrl(tab.url);
     if (USER_LOG_RECORDS.hasOwnProperty(url_id)){
         if (USER_LOG_RECORDS[url_id].hasOwnProperty(logname)) {
-            return USER_LOG_RECORDS[url_id][logname].log_data;
+            return USER_LOG_RECORDS[url_id][logname].gaze_data;
         }else{
             return [];
         }

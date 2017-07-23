@@ -24,19 +24,21 @@
       ],
       "js": [
         "js/jquery-1.4.2.min.js",
+        "js/content/variable.js",
         "js/utils.js",
-        "js/content/player.js",
         "js/content/tracker.js",
-        "js/content/content.js",
         "js/content/searchgazer.js",
-        "js/content/eyeTracker.js"
+        "js/content/eyeTracker.js",
+        "js/content/player.js",
+        "js/content/content.js"
       ],
-      "run_at": "document_start"
+      "run_at": "document_end"
     }
   ],
   "web_accessible_resources":[
     "sources/icon.png",
-    "sources/cursor.gif"
+    "sources/cursor.gif",
+    "sources/point.png"
   ],
   "permissions": [
     "pageCapture",

@@ -7096,7 +7096,7 @@ var webglFilter = function() {
     var dist = max-min;
     
     if (dist == 0) {
-      console.log("a patchresponse was monotone, causing normalization to fail. Leaving it unchanged.")
+      //console.log("a patchresponse was monotone, causing normalization to fail. Leaving it unchanged.")
       response = response.map(function() {return 1});
     } else {
       for (var i = 0;i < msize;i++) {
@@ -10356,7 +10356,8 @@ if (typeof exports !== 'undefined') {
     var smoothingVals = new webgazer.util.DataWindow(4);
     function loop() {
         var gazeData = getPrediction();
-        var elapsedTime = performance.now() - clockStart;
+        // var elapsedTime = performance.now() - clockStart;
+        var elapsedTime = performance.now();
 
         callback(gazeData, elapsedTime);
 
